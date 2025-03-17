@@ -1,0 +1,32 @@
+[project]
+name = "llm-parser-filter"
+version = "0.1.0"
+description = "Simple REPL-friendly LLM parser and filter functions"
+authors = []
+dependencies = [
+    "langchain-openai>=0.0.8",
+    "langchain-core>=0.1.27",
+    "langchain-anthropic>=0.0.8",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.12.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["llm_parser_filter", "tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
