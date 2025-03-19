@@ -5,13 +5,13 @@ Core functionality for LLM-based parsing and filtering.
 from typing import Any, Dict, Optional, Union
 
 from langchain_anthropic import ChatAnthropic
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
 
 def get_parser(
     prompt: str,
-    model: str = "gpt-4o",
+    model: str = "gpt-3.5-turbo",
     provider: str = "openai",
     temperature: float = 0.0,
 ) -> Any:
@@ -38,19 +38,19 @@ def get_parser(
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     
-
-    system_prompt = f"""
-    You are a parser that extracts structured data from text.
+    # Create message templates
+    system_template = """You are a parser that extracts structured data from text.
     The output should be a valid JSON object.
     The fields should be extracted according to the following request:
 
-    {prompt}
-    """
-
+    {prompt}"""
+    
+    human_template = "{text}"
+    
     # Create the prompt template
     prompt_template = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", "{text}")
+        SystemMessagePromptTemplate.from_template(system_template),
+        HumanMessagePromptTemplate.from_template(human_template)
     ])
     
     # Create the output parser
@@ -97,21 +97,23 @@ def get_filter(
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     
-    system_prompt = f"""
-    You are a filter that determines if text meets certain criteria.
-    The output should be a boolean: true or false.
+    # Create message templates
+    system_template = """You are a filter that determines if text meets certain criteria.
+    The output should be a boolean: true or false. It's also should be valid JSON. So only lowercase true or false.
     The criteria should be extracted according to the following request:
 
-    {prompt}
-    """
+    {prompt}"""
+    
+    human_template = "{text}"
+    
     # Create the prompt template
     prompt_template = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("user", "{text}")
+        SystemMessagePromptTemplate.from_template(system_template),
+        HumanMessagePromptTemplate.from_template(human_template)
     ])
     
     # Create the output parser
-    parser = JsonOutputParser()
+    parser = StrOutputParser()
     
     # Create the chain
     chain = prompt_template | llm | parser
@@ -122,7 +124,7 @@ def get_filter(
             result = chain.invoke({"prompt": prompt, "text": text})
             # Convert result to boolean, handling case-insensitive strings
             if isinstance(result, str):
-                return result.lower() in ("yes", "true", "1")
+                return result.strip().lower() in ("yes", "true", "1")
             return bool(result)
         except Exception as e:
             raise ValueError(f"Failed to filter text: {str(e)}")

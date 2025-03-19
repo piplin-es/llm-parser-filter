@@ -1,12 +1,6 @@
-# LLM Parser Filter
+# LLM Parser and Filter
 
 A simple, REPL-friendly package for LLM-based text parsing and filtering.
-
-## Installation
-
-```bash
-pip install llm-parser-filter
-```
 
 ## Usage
 
@@ -19,9 +13,7 @@ from llm_parser_filter import get_parser
 
 # Create a parser function
 parse_email = get_parser(
-    prompt="Extract the following information from the email: sender, date, subject, and main topic",
-    model="gpt-4o",  # or "claude-3-opus-20240229"
-    provider="openai"  # or "anthropic"
+    prompt="Extract the following information from the email: sender, date, subject, and main topic"
 )
 
 # Use the parser
@@ -42,9 +34,7 @@ from llm_parser_filter import get_filter
 
 # Create a filter function
 is_urgent = get_filter(
-    prompt="Determine if this email is urgent based on its content and subject",
-    model="gpt-4o",
-    provider="openai"
+    prompt="Determine if this email is urgent based on its content and subject"
 )
 
 # Use the filter

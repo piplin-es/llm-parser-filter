@@ -22,9 +22,7 @@ def test_get_parser_openai():
     """Test parser with OpenAI provider."""
     # Create parser
     parse_email = get_parser(
-        prompt="Extract sender, date, subject, and topic",
-        model="gpt-4o",
-        provider="openai"
+        prompt="Extract sender, date, subject, and topic"
     )
     
     # Test parsing
@@ -87,4 +85,72 @@ def test_get_filter_case_insensitive():
     
     # Verify result
     assert isinstance(result, bool)
-    assert result is True  # This email should be marked as urgent 
+    assert result is True  # This email should be marked as urgent
+
+def test_invoice_parser():
+    """Test parsing invoice emails."""
+    # Create parser
+    invoice_parser = get_parser(
+        prompt="""Extract the following information from the invoice email:
+        - Invoice Date: The date of the invoice (in YYYY-MM-DD format if possible)
+        - Company Name: The company that issued the invoice
+        - Amount: The total amount charged (numeric value only)
+        - Currency: The currency of the amount (USD, EUR, etc.)
+        
+        Return the information in JSON format with these exact keys:
+        {"date": "YYYY-MM-DD", "company": "Company Name", "amount": 123.45, "currency": "USD"}
+        
+        If any information is missing, use null for that field."""
+    )
+    
+    # Test email with all information
+    complete_email = """
+    From: billing@acme.com
+    Date: March 15, 2024
+    Subject: Invoice #12345 for Services
+
+    Dear Customer,
+
+    Please find attached invoice #12345 from Acme Corp for services rendered.
+    
+    Amount Due: $499.99
+    Due Date: 2024-03-30
+
+    Thank you for your business.
+    Best regards,
+    Acme Corp
+    """
+    
+    result = invoice_parser(complete_email)
+    
+    # Verify structure and types
+    assert isinstance(result, dict)
+    assert "date" in result
+    assert "company" in result
+    assert "amount" in result
+    assert "currency" in result
+    
+    # Verify specific values
+    assert result["date"] == "2024-03-15"  # Should normalize the date
+    assert result["company"] == "Acme Corp"
+    assert result["amount"] == 499.99
+    assert result["currency"] == "USD"
+    
+    # Test email with missing information
+    incomplete_email = """
+    Subject: Payment Reminder
+    
+    Hello,
+    
+    This is a reminder about the outstanding payment of 299.50 EUR.
+    
+    Regards,
+    """
+    
+    result = invoice_parser(incomplete_email)
+    
+    # Verify handling of missing information
+    assert result["date"] is None  # Missing date should be null
+    assert result["company"] is None  # Missing company should be null
+    assert result["amount"] == 299.50
+    assert result["currency"] == "EUR" 

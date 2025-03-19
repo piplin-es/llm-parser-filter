@@ -356,7 +356,7 @@ wheels = [
 
 [[package]]
 name = "llm-parser-filter"
-version = "0.1.0"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "langchain-anthropic" },
