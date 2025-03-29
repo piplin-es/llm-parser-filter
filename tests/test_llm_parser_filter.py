@@ -4,6 +4,9 @@ Tests for the LLM Parser Filter package.
 
 import pytest
 from llm_parser_filter import get_parser, get_filter
+import os
+from pathlib import Path
+import json
 
 # Test data
 SAMPLE_EMAIL = """
@@ -77,7 +80,8 @@ def test_get_filter_case_insensitive():
     # Create filter
     is_urgent = get_filter(
         prompt="Is this urgent?",
-        provider="openai"
+        provider="openai",
+        model="gpt-4o"
     )
     
     # Test filtering with different case in prompt
@@ -153,4 +157,45 @@ def test_invoice_parser():
     assert result["date"] is None  # Missing date should be null
     assert result["company"] is None  # Missing company should be null
     assert result["amount"] == 299.50
-    assert result["currency"] == "EUR" 
+    assert result["currency"] == "EUR"
+
+def test_parser():
+    """Test parser with real OpenAI API"""
+    parser = get_parser("Extract name and age")
+    result = parser("John is 25 years old")
+    
+    assert isinstance(result, dict)
+    assert "name" in result
+    assert "age" in result
+    assert result["name"] == "John"
+    assert result["age"] == 25
+
+def test_filter():
+    """Test filter with real OpenAI API"""
+    filter_fn = get_filter("Check if text is positive")
+    result = filter_fn("This is great!")
+    
+    assert isinstance(result, bool)
+    assert result is True
+    
+    result = filter_fn("This is terrible!")
+    assert result is False
+
+def test_token_logging():
+    """Test that token usage is logged correctly"""
+    parser = get_parser("Extract name and age")
+    parser("John is 25 years old")
+    
+    # Get the log file path from environment
+    log_file = Path(os.getenv('LLM_TOKEN_LOG_FILE'))
+    
+    # Check that log file exists and contains token usage
+    assert log_file.exists()
+    with open(log_file) as f:
+        logs = [json.loads(line) for line in f]
+    assert len(logs) > 0
+    assert logs[0]["type"] == "token_usage"
+    assert "prompt_tokens" in logs[0]
+    assert "completion_tokens" in logs[0]
+    assert "total_tokens" in logs[0]
+    assert logs[0]["function"] == "parser" 
