@@ -1,12 +1,14 @@
 [project]
 name = "llm-parser-filter"
-version = "0.1.6"
+version = "0.1.7"
 description = "Simple REPL-friendly LLM parser and filter functions"
 authors = []
 dependencies = [
     "langchain-openai>=0.0.8",
     "langchain-core>=0.1.27",
     "langchain-anthropic>=0.0.8",
+    "html2text>=2024.2.26",
+    "pdfplumber>=0.11.6",
 ]
 
 [project.optional-dependencies]

@@ -45,6 +45,40 @@ is_positive = filter_fn("This is great!")
 print(is_positive)  # True
 ```
 
+### Text Conversion Utilities
+
+The library provides utilities for converting HTML and PDF content to plain text, which can be used seamlessly with the parser and filter functions.
+
+```python
+# Function signatures
+def html2text(html_content: str | bytes) -> str
+def pdf2text(pdf_content: bytes) -> str
+
+# Usage examples
+from llm_parser_filter import get_parser, get_filter
+from llm_parser_filter.text_conversion import html2text, pdf2text
+
+# Convert HTML to text and parse information
+html_content = "<html><body><p>John is 25 years old</p></body></html>"
+plain_text = html2text(html_content)
+parser = get_parser("Extract name and age")
+result = parser(plain_text)
+print(result)  # {'name': 'John', 'age': 25}
+
+# Convert PDF to text and apply sentiment filter
+pdf_content = base64_encoded_pdf_bytes  # Your PDF content in base64
+plain_text = pdf2text(pdf_content)
+filter_fn = get_filter("Check if the text expresses positive sentiment")
+is_positive = filter_fn(plain_text)
+```
+
+The text conversion utilities support:
+- HTML content (raw strings or base64 encoded)
+- PDF content (base64 encoded bytes)
+- UTF-8 encoding/decoding
+- Multi-page PDF processing
+- Automatic base64 handling
+
 ### Token Usage Logging
 
 Token usage is automatically logged. You can specify a custom log file:
