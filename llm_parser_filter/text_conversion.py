@@ -35,20 +35,27 @@ def pdf2text(pdf_content: bytes) -> str:
     Convert PDF content to plain text.
     
     Args:
-        pdf_content: PDF content as base64 encoded bytes
+        pdf_content: PDF content as either raw bytes or base64 encoded bytes
         
     Returns:
         str: Plain text content
     """
     try:
-        # Decode base64 content
-        # Gmail API uses URL-safe base64, so we need to handle padding
-        standard_base64_data = pdf_content.replace("-", "+").replace("_", "/")
-        missing_padding = len(standard_base64_data) % 4
-        if missing_padding:
-            standard_base64_data += '=' * (4 - missing_padding)
-        
-        pdf_bytes = base64.b64decode(standard_base64_data, validate=True)
+        # Try to detect if content is base64 encoded
+        try:
+            # First try standard base64
+            pdf_bytes = base64.b64decode(pdf_content, validate=True)
+        except Exception:
+            try:
+                # Then try URL-safe base64
+                standard_base64_data = pdf_content.decode('ascii').replace("-", "+").replace("_", "/")
+                missing_padding = len(standard_base64_data) % 4
+                if missing_padding:
+                    standard_base64_data += '=' * (4 - missing_padding)
+                pdf_bytes = base64.b64decode(standard_base64_data, validate=True)
+            except Exception:
+                # If both base64 decoding attempts fail, assume it's raw PDF bytes
+                pdf_bytes = pdf_content
         
         # Convert PDF to text using pdfplumber
         with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:

@@ -3,10 +3,12 @@ Tests for the LLM Parser Filter package.
 """
 
 import pytest
-from llm_parser_filter import get_parser, get_filter
+from llm_parser_filter import get_parser, get_filter, get_html_parser, get_pdf_parser
 import os
 from pathlib import Path
 import json
+import base64
+
 
 # Test data
 SAMPLE_EMAIL = """
@@ -198,4 +200,85 @@ def test_token_logging():
     assert "prompt_tokens" in logs[0]
     assert "completion_tokens" in logs[0]
     assert "total_tokens" in logs[0]
-    assert logs[0]["function"] == "parser" 
+    assert logs[0]["function"] == "parser"
+
+def test_html_parser():
+    """Test HTML parser with real OpenAI API"""
+    html_parser = get_html_parser("Extract name and age")
+    
+    # Test with raw HTML string
+    html_content = """
+    <html>
+        <body>
+            <h1>User Profile</h1>
+            <p>Name: John Smith</p>
+            <p>Age: 25 years old</p>
+        </body>
+    </html>
+    """
+    result = html_parser(html_content)
+    
+    assert isinstance(result, dict)
+    assert "name" in result
+    assert "age" in result
+    assert result["name"] == "John Smith"
+    assert result["age"] == 25
+    
+    # Test with base64 encoded HTML
+    encoded_html = base64.b64encode(html_content.encode('utf-8'))
+    result = html_parser(encoded_html)
+    
+    assert isinstance(result, dict)
+    assert result["name"] == "John Smith"
+    assert result["age"] == 25
+
+def test_pdf_parser():
+    """Test PDF parser with real OpenAI API"""
+    from reportlab.pdfgen import canvas
+    from io import BytesIO
+    
+    # Create a PDF in memory
+    pdf_buffer = BytesIO()
+    c = canvas.Canvas(pdf_buffer)
+    c.drawString(100, 750, "John Smith is 25 years old")
+    c.save()
+    
+    # Get raw PDF bytes
+    pdf_bytes = pdf_buffer.getvalue()
+    
+    # Test with raw PDF bytes
+    pdf_parser = get_pdf_parser("Extract name and age")
+    result = pdf_parser(pdf_bytes)
+    
+    # Verify results for raw bytes
+    assert isinstance(result, dict)
+    assert "name" in result
+    assert "age" in result
+    assert result["name"] == "John Smith"
+    assert result["age"] == 25
+    
+    # Test with base64 encoded PDF
+    pdf_base64 = base64.b64encode(pdf_bytes)
+    result = pdf_parser(pdf_base64)
+    
+    # Verify results for base64
+    assert isinstance(result, dict)
+    assert "name" in result
+    assert "age" in result
+    assert result["name"] == "John Smith"
+    assert result["age"] == 25
+    
+    # Test with URL-safe base64 encoded PDF
+    pdf_base64_urlsafe = base64.urlsafe_b64encode(pdf_bytes)
+    result = pdf_parser(pdf_base64_urlsafe)
+    
+    # Verify results for URL-safe base64
+    assert isinstance(result, dict)
+    assert "name" in result
+    assert "age" in result
+    assert result["name"] == "John Smith"
+    assert result["age"] == 25
+    
+    # Test with invalid PDF content
+    with pytest.raises(ValueError):
+        pdf_parser(b"invalid pdf data") 

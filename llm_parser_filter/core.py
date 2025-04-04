@@ -248,4 +248,82 @@ def get_filter(
         except Exception as e:
             raise ValueError(f"Failed to filter text: {str(e)}")
     
-    return filter_text 
+    return filter_text
+
+def get_html_parser(
+    prompt: str,
+    model: str = "gpt-3.5-turbo",
+    provider: str = "openai",
+    temperature: float = 0.0,
+    log_file: Optional[str] = None,
+) -> Callable[[Union[str, bytes]], Dict[str, Any]]:
+    """
+    Create a parser that extracts structured data from HTML content using an LLM.
+    The HTML is first converted to plain text before parsing.
+    
+    Args:
+        prompt: The prompt to use for parsing
+        model: The model to use (default: "gpt-3.5-turbo")
+        provider: The LLM provider to use ("openai" or "anthropic")
+        temperature: The temperature to use for generation (default: 0.0)
+        log_file: The path to the log file for token usage logging
+        
+    Returns:
+        A function that takes HTML content (as string or base64 bytes) and returns structured data
+        
+    Raises:
+        ValueError: If provider is not supported or parsing fails
+    """
+    from .text_conversion import html2text
+    standard_parser = get_parser(prompt, model, provider, temperature, log_file)
+    
+    def parse_html(html_content: Union[str, bytes]) -> Dict[str, Any]:
+        """Parse HTML content into structured data."""
+        try:
+            # Convert HTML to plain text
+            plain_text = html2text(html_content)
+            # Parse the plain text
+            return standard_parser(plain_text)
+        except Exception as e:
+            raise ValueError(f"Failed to parse HTML content: {str(e)}")
+    
+    return parse_html
+
+def get_pdf_parser(
+    prompt: str,
+    model: str = "gpt-3.5-turbo",
+    provider: str = "openai",
+    temperature: float = 0.0,
+    log_file: Optional[str] = None,
+) -> Callable[[bytes], Dict[str, Any]]:
+    """
+    Create a parser that extracts structured data from PDF content using an LLM.
+    The PDF is first converted to plain text before parsing.
+    
+    Args:
+        prompt: The prompt to use for parsing
+        model: The model to use (default: "gpt-3.5-turbo")
+        provider: The LLM provider to use ("openai" or "anthropic")
+        temperature: The temperature to use for generation (default: 0.0)
+        log_file: The path to the log file for token usage logging
+        
+    Returns:
+        A function that takes PDF content (as base64 bytes) and returns structured data
+        
+    Raises:
+        ValueError: If provider is not supported or parsing fails
+    """
+    from .text_conversion import pdf2text
+    standard_parser = get_parser(prompt, model, provider, temperature, log_file)
+    
+    def parse_pdf(pdf_content: bytes) -> Dict[str, Any]:
+        """Parse PDF content into structured data."""
+        try:
+            # Convert PDF to plain text
+            plain_text = pdf2text(pdf_content)
+            # Parse the plain text
+            return standard_parser(plain_text)
+        except Exception as e:
+            raise ValueError(f"Failed to parse PDF content: {str(e)}")
+    
+    return parse_pdf 
