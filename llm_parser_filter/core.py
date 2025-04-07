@@ -19,7 +19,7 @@ from pathlib import Path
 
 DEFAULT_LOG_FILE = "llm_token_usage.log"
 
-rate_limiter = InMemoryRateLimiter(
+openai_rate_limiter = InMemoryRateLimiter(
     requests_per_second=500,      # Allow 1 request per second
     check_every_n_seconds=0.1,  # Check every 100 milliseconds
     max_bucket_size=5,          # Allow bursts of up to 5 requests
@@ -113,7 +113,7 @@ def create_llm(
             temperature=temperature,
             callbacks=callbacks,
             openai_api_key=api_key,  # Explicitly passing the API key,
-            rate_limiter=rate_limiter
+            rate_limiter=openai_rate_limiter
         )
     elif provider == "anthropic":
         return ChatAnthropic(

@@ -1,10 +1,10 @@
 # LLM Parser Filter Usage Guide
 
-This guide explains how to extract structured fields from unstructured data using the LLM Parser Filter library. Whether you're working with HTML documents, PDF files, or raw text, you'll learn how to efficiently convert them into structured, machine-readable fields.
+This guide explains how to extract structured fields from unstructured data using the LLM Parser Filter library. Whether you're working with HTML documents or PDF files, you'll learn how to efficiently convert them into structured, machine-readable fields.
 
 ## When to Use Each Parser
 
-### HTML and PDF Parsers (Recommended)
+### HTML and PDF Parsers
 
 Use these specialized parsers to extract structured fields from HTML or PDF content. They automatically handle format conversion and optimize token usage:
 
@@ -42,24 +42,6 @@ Key features:
 - Multi-page PDF support
 - HTML structure handling
 
-### Generic Text Parser
-
-Use the generic parser to extract structured fields from plain text or when you need custom preprocessing:
-
-```python
-from llm_parser_filter import get_parser
-
-# Best for extracting fields from:
-# - Plain text
-# - Pre-processed content
-# - Custom text formats
-parser = get_parser("Extract name and age fields from the text")
-result = parser("John is 25 years old")
-print(result)  # {'name': 'John', 'age': 25}
-```
-
-Note: For HTML or PDF content, prefer the specialized parsers to avoid token overhead.
-
 ### Text Filtering
 
 Use filters to classify or categorize text based on field content:
@@ -90,15 +72,14 @@ All parsers and filters accept these parameters:
 1. **Choose the Right Parser**:
    - HTML documents → `get_html_parser`
    - PDF documents → `get_pdf_parser`
-   - Plain text → `get_parser`
 
 2. **Write Clear Field Extraction Prompts**:
    ```python
    # Good: Specific fields and formats
-   parser = get_parser("Extract these fields: full_name (string), age (number), is_student (boolean)")
+   html_parser = get_html_parser("Extract these fields: full_name (string), age (number), is_student (boolean)")
    
    # Bad: Vague fields
-   parser = get_parser("Get name and age")
+   html_parser = get_html_parser("Get name and age")
    ```
 
 3. **Handle Multiple Document Formats**:
